@@ -1,0 +1,11 @@
+name: VtReZone
+version: 1.0-SNAPSHOT
+main: com.vtrezone.rezone.ReZonePlugin
+api-version: 1.13
+author: thangks
+softdepend: [WorldGuard]
+commands:
+  rezone:
+    description: Auto-regenerating region management tool
+    aliases: [rz]
+    permission: rezone.admin

@@ -1,0 +1,33 @@
+# ========================================== #
+#             REZONE CONFIGURATION           #
+# ========================================== #
+
+# Enable/Disable support for getting selections from WorldEdit / FastAsyncWorldEdit (FAWE)
+hook-worldedit: true
+
+# Default Wand item for ReZone region selection
+wand:
+  item: BLAZE_ROD
+  name: "&6&l[ReZone] &eSelection Wand"
+  lore:
+    - "&7Left-Click: Select Position 1"
+    - "&7Right-Click: Select Position 2"
+
+# Display particle borders around active regions for better visibility
+region-particles:
+  enabled: true
+  particle-type: FLAME
+  update-interval: 40 # Particle refresh rate in ticks (40 ticks = 2 seconds)
+
+# Effects played when a block is restored/disappears
+block-restore-effects:
+  enabled: true
+  dynamic-sound: true # Auto-detects exact block sound based on material (e.g., Glass break, Wood place)
+  particle: CLOUD
+  sound: BLOCK_STONE_PLACE # Fallback sound if dynamic-sound is disabled
+  volume: 1.0
+  pitch: 1.0
+
+# Server performance settings
+optimization:
+  blocks-per-tick: 50 # Maximum number of blocks restored per tick (to prevent lag spikes).
