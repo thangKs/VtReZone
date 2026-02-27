@@ -21,9 +21,10 @@ public class Region {
     private String filterType; 
     private List<String> filteredBlocks;
     private Map<String, Integer> customDelays;
+    private boolean batchMode;
 
     public Region(String id, World world, int x1, int y1, int z1, int x2, int y2, int z2, 
-                  int delay, String filterType, List<String> filteredBlocks, Map<String, Integer> customDelays) {
+                  int delay, String filterType, List<String> filteredBlocks, Map<String, Integer> customDelays, boolean batchMode) {
         this.id = id;
         this.world = world;
         this.minX = Math.min(x1, x2);
@@ -36,6 +37,7 @@ public class Region {
         this.filterType = filterType;
         this.filteredBlocks = filteredBlocks;
         this.customDelays = customDelays != null ? customDelays : new HashMap<>();
+        this.batchMode = batchMode;
     }
 
     public boolean contains(Location loc) {
@@ -51,6 +53,7 @@ public class Region {
     public String getFilterType() { return filterType; }
     public List<String> getFilteredBlocks() { return filteredBlocks; }
     public Map<String, Integer> getCustomDelays() { return customDelays; }
+    public boolean isBatchMode() { return batchMode; }
     
     public int getMinX() { return minX; }
     public int getMinY() { return minY; }
@@ -61,4 +64,5 @@ public class Region {
 
     public void setDelay(int delay) { this.delay = delay; }
     public void setFilterType(String filterType) { this.filterType = filterType; }
+    public void setBatchMode(boolean batchMode) { this.batchMode = batchMode; }
 }

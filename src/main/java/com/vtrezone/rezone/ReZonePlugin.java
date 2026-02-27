@@ -193,6 +193,12 @@ public class ReZonePlugin extends JavaPlugin implements Listener {
         inv.setItem(12, createItem(Material.HOPPER, ChatColor.GREEN + "Block Filter", ChatColor.GRAY + "Mode: " + ChatColor.AQUA + region.getFilterType(), "", ChatColor.GREEN + "Click to edit list"));
         inv.setItem(14, createItem(Material.DIAMOND_ORE, ChatColor.AQUA + "Custom Delays", ChatColor.GRAY + "Contains: " + ChatColor.AQUA + region.getCustomDelays().size() + " blocks", "", ChatColor.GREEN + "Click to configure"));
         inv.setItem(16, createItem(Material.NETHER_STAR, ChatColor.LIGHT_PURPLE + "Update Memory", ChatColor.GRAY + "Save the latest state.", "", ChatColor.GREEN + "Click to update"));
+        
+        String modeName = region.isBatchMode() ? ChatColor.LIGHT_PURPLE + "BATCH" : ChatColor.AQUA + "INDIVIDUAL";
+        inv.setItem(20, createItem(Material.REPEATER, ChatColor.GOLD + "Reset Mode", ChatColor.GRAY + "Current: " + modeName, ChatColor.GRAY + "Toggle how blocks reset.", "", ChatColor.YELLOW + "Click to toggle"));
+
+        inv.setItem(22, createItem(Material.BEACON, ChatColor.GOLD + "Instant Reset", ChatColor.GRAY + "Force restore all pending blocks", ChatColor.GRAY + "in this region NOW.", "", ChatColor.YELLOW + "Click to force reset"));
+        
         inv.setItem(26, createItem(Material.BARRIER, ChatColor.RED + "Delete Region", ChatColor.GRAY + "Permanently delete this region.", "", ChatColor.DARK_RED + "Shift + Left-Click to Delete"));
         fillBackground(inv);
         player.openInventory(inv);
@@ -364,6 +370,18 @@ public class ReZonePlugin extends JavaPlugin implements Listener {
                     p.sendMessage(ChatColor.GREEN + "Successfully updated memory for region '" + region.getId() + "'!");
                     p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
                 }
+                else if (slot == 20) {
+                    region.setBatchMode(!region.isBatchMode());
+                    regionManager.saveRegion(region);
+                    openMainMenu(p, region);
+                    p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
+                }
+                else if (slot == 22) {
+                    p.closeInventory();
+                    regenManager.forceRestoreRegion(region);
+                    p.sendMessage(ChatColor.GREEN + "Forced immediate reset for region '" + region.getId() + "'!");
+                    p.playSound(p.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1f, 1f);
+                }
                 else if (slot == 26 && e.getClick() == ClickType.SHIFT_LEFT) {
                     p.closeInventory();
                     regionManager.removeRegion(region.getId());
@@ -371,7 +389,7 @@ public class ReZonePlugin extends JavaPlugin implements Listener {
                     p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1f, 1f);
                 }
                 
-                if (slot == 10 || slot == 12 || slot == 14 || slot == 16 || slot == 26) {
+                if (slot == 10 || slot == 12 || slot == 14 || slot == 16 || slot == 20 || slot == 26) {
                     p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
                 }
             }

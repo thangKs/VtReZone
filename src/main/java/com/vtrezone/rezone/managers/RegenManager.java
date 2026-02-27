@@ -51,6 +51,7 @@ public class RegenManager implements Listener {
     
     private final PriorityQueue<RestoreTask> queue = new PriorityQueue<>();
     private final Map<Location, RestoreTask> pendingLocations = new HashMap<>();
+    private final Map<String, Long> regionBatchTimers = new HashMap<>();
 
     public RegenManager(ReZonePlugin plugin) {
         this.plugin = plugin;
@@ -158,12 +159,27 @@ public class RegenManager implements Listener {
 
         if (isIgnoredByFilter(region, interactedMat)) return;
 
-        if (pendingLocations.containsKey(loc)) {
-            RestoreTask existingTask = pendingLocations.get(loc);
+        long executeTime;
+        if (region.isBatchMode()) {
+            long now = System.currentTimeMillis();
+            Long batchTime = regionBatchTimers.get(region.getId());
+            if (batchTime == null || batchTime <= now) {
+                int delay = region.getDelay();
+                if (delay < 1) delay = 1;
+                batchTime = now + (delay * 1000L);
+                regionBatchTimers.put(region.getId(), batchTime);
+            }
+            executeTime = batchTime;
+        } else {
             int delay = region.getCustomDelays().getOrDefault(interactedMat.name(), -1);
             if (delay == -1) delay = region.getDelay();
             if (delay < 1) delay = 1;
-            existingTask.executeTime = System.currentTimeMillis() + (delay * 1000L);
+            executeTime = System.currentTimeMillis() + (delay * 1000L);
+        }
+
+        if (pendingLocations.containsKey(loc)) {
+            RestoreTask existingTask = pendingLocations.get(loc);
+            existingTask.executeTime = executeTime;
             
             queue.remove(existingTask); 
             queue.add(existingTask);
@@ -179,17 +195,13 @@ public class RegenManager implements Listener {
             }
         }
 
-        int delay = region.getCustomDelays().getOrDefault(interactedMat.name(), -1);
-        if (delay == -1) delay = region.getDelay();
-        if (delay < 1) delay = 1;
-
-        long executeTime = System.currentTimeMillis() + (delay * 1000L);
         RestoreTask task = new RestoreTask(loc, originalState, executeTime);
         queue.add(task);
         pendingLocations.put(loc, task);
     }
 
     public void updateRegionMemory(Region region) {
+        regionBatchTimers.remove(region.getId());
         List<RestoreTask> toRemove = new ArrayList<>();
         for (RestoreTask task : queue) {
             if (region.contains(task.loc)) toRemove.add(task);
@@ -371,6 +383,7 @@ public class RegenManager implements Listener {
     }
 
     public void forceRestoreAll() {
+        regionBatchTimers.clear();
         for (RestoreTask task : queue) {
             task.state.update(true, true);
             for (Entity ent : task.loc.getWorld().getNearbyEntities(task.loc.clone().add(0.5, 1.0, 0.5), 0.5, 1.0, 0.5)) {
@@ -379,6 +392,31 @@ public class RegenManager implements Listener {
         }
         queue.clear();
         pendingLocations.clear();
+    }
+
+    public void forceRestoreRegion(Region region) {
+        regionBatchTimers.remove(region.getId());
+        List<RestoreTask> toRestore = new ArrayList<>();
+        
+        for (RestoreTask task : queue) {
+            if (region.contains(task.loc)) {
+                toRestore.add(task);
+            }
+        }
+        
+        for (RestoreTask task : toRestore) {
+            queue.remove(task);
+            pendingLocations.remove(task.loc);
+            
+            task.state.update(true, true);
+            if (task.loc.getWorld() != null) {
+                for (Entity ent : task.loc.getWorld().getNearbyEntities(task.loc.clone().add(0.5, 1.0, 0.5), 0.5, 1.0, 0.5)) {
+                    if (ent.getType() == EntityType.ENDER_CRYSTAL || ent.getType() == EntityType.FALLING_BLOCK) {
+                        ent.remove();
+                    }
+                }
+            }
+        }
     }
 
     private static class RestoreTask implements Comparable<RestoreTask> {

@@ -60,11 +60,13 @@ public class RegionManager {
                         customDelays.put(mat, regionsConfig.getInt(path + "custom-delays." + mat));
                     }
                 }
+                
+                boolean batchMode = regionsConfig.getBoolean(path + "batch-mode", false);
 
                 Region region = new Region(key, world, 
                     Integer.parseInt(min[0]), Integer.parseInt(min[1]), Integer.parseInt(min[2]),
                     Integer.parseInt(max[0]), Integer.parseInt(max[1]), Integer.parseInt(max[2]),
-                    delay, filterType, filteredBlocks, customDelays);
+                    delay, filterType, filteredBlocks, customDelays, batchMode);
                 regions.put(key.toLowerCase(), region);
             }
         }
@@ -77,9 +79,10 @@ public class RegionManager {
         Map<String, Integer> defaultCustomDelays = new HashMap<>();
         defaultCustomDelays.put("OBSIDIAN", 600);
         defaultCustomDelays.put("DIAMOND_BLOCK", 120);
+        boolean defaultBatchMode = false;
 
         Region region = new Region(id, pos1.getWorld(), pos1.getBlockX(), pos1.getBlockY(), pos1.getBlockZ(),
-                pos2.getBlockX(), pos2.getBlockY(), pos2.getBlockZ(), defaultDelay, defaultFilter, defaultBlocks, defaultCustomDelays);
+                pos2.getBlockX(), pos2.getBlockY(), pos2.getBlockZ(), defaultDelay, defaultFilter, defaultBlocks, defaultCustomDelays, defaultBatchMode);
         
         regions.put(id.toLowerCase(), region);
         saveRegion(region);
@@ -104,7 +107,8 @@ public class RegionManager {
             "- delay: The default reset delay in seconds.\n" +
             "- filter-type: Mode of operation (NONE, WHITELIST, or BLACKLIST).\n" +
             "- filtered-blocks: List of block materials affected by the filter.\n" +
-            "- custom-delays: Specific delays for specific blocks."
+            "- custom-delays: Specific delays for specific blocks.\n" +
+            "- batch-mode: true = restore entire region at once, false = individual blocks."
         );
         regionsConfig.options().copyHeader(true);
 
@@ -115,6 +119,7 @@ public class RegionManager {
         regionsConfig.set(path + "delay", r.getDelay());
         regionsConfig.set(path + "filter-type", r.getFilterType());
         regionsConfig.set(path + "filtered-blocks", r.getFilteredBlocks());
+        regionsConfig.set(path + "batch-mode", r.isBatchMode());
         
         regionsConfig.set(path + "custom-delays", null);
         for (Map.Entry<String, Integer> entry : r.getCustomDelays().entrySet()) {
